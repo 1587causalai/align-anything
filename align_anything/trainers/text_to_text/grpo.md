@@ -123,7 +123,7 @@ GRPO的核心是定义一个损失函数，然后用梯度下降优化它。损�
 
 5. **计算损失**  
    对于每个token，计算：
-   \[ \text{per_token_loss} = -\left( \exp(\log p - \log p_{\text{detached}}) \cdot \text{advantage} - \beta \cdot \text{KL} \right) \]
+   $$\text{per token loss} = -\left( \exp(\log p - \log p_{\text{detached}}) \cdot \text{advantage} - \beta \cdot \text{KL} \right)$$
    然后用掩码（`completion_mask`）排除无效token（如EOS后的填充），求平均损失。
 
 6. **更新模型**  
