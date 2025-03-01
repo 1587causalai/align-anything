@@ -1,4 +1,4 @@
-# Copyright 2024 PKU-Alignment Team. All Rights Reserved.
+# Copyright 2025 PKU-Alignment Team. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,6 +23,11 @@ import torch.multiprocessing as mp
 from janus.models import MultiModalityCausalLM, VLChatProcessor, VLMImageProcessor
 from PIL import Image
 from tqdm import tqdm
+
+from align_anything.utils.device_utils import (
+    set_device,
+    torch_gc,
+)
 
 
 ignore_index = -100
@@ -80,11 +85,12 @@ def tokenize_sample(vl_chat_processor, vl_gpt, vl_image_processor, formatted_sam
     return {
         'input_ids': full_input_ids.to('cpu'),
         'labels': labels.to('cpu'),
+        'task': 'generation',
     }
 
 
 def process_data(gpu, chunk, model_path, output_paths, cache_path):
-    device = f"cuda:{gpu}"
+    device = set_device(gpu)
     print(f"Initializing Model on {device}")
     vl_chat_processor = VLChatProcessor.from_pretrained(model_path, device=device)
     vl_gpt = MultiModalityCausalLM.from_pretrained(model_path, trust_remote_code=True).to(device)
@@ -102,7 +108,7 @@ def process_data(gpu, chunk, model_path, output_paths, cache_path):
         torch.save(sample, file_path)
         local_output_paths.append(file_path)
         del sample
-        torch.cuda.empty_cache()
+        torch_gc()
 
     output_paths.extend(local_output_paths)
     print(f"Processed {len(local_output_paths)} samples on GPU {gpu}")
