@@ -1,0 +1,8 @@
+---
+description: 常见项目设置
+globs: 
+alwaysApply: false
+---
+# Your rule content
+
+- 使用本地模型 /root/models/Qwen1.5-0.5B 进行对齐算法初步演示

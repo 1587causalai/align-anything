@@ -70,19 +70,47 @@ class PreferenceDataset(Dataset):
 
         if isinstance(optional_args, str):
             optional_args = [optional_args]
-        self.raw_data = load_dataset(
-            path,
-            name=name,
-            split=split,
-            data_files=data_files,
-            *optional_args,
-            trust_remote_code=True,
-        )
+            
+        # 使用数据文件或加载数据集
+        if data_files:
+            print(f"正在加载本地数据文件: {data_files}")
+            self.raw_data = self.load_local_data(data_files)
+        else:
+            self.raw_data = load_dataset(
+                path,
+                name=name,
+                split=split,
+                data_files=data_files,
+                *optional_args,
+                trust_remote_code=True,
+            )
+            
         self.valid_indices = self.filter_indices()
 
         if size:
             size = min(size, len(self.raw_data))
             self.raw_data = self.raw_data.select(range(int(size)))
+            
+    def load_local_data(self, data_file: str):
+        """加载本地数据文件"""
+        import json
+        from datasets import Dataset
+        
+        data = []
+        with open(data_file, 'r', encoding='utf-8') as f:
+            for line in f:
+                try:
+                    item = json.loads(line.strip())
+                    # 确保必要的字段存在
+                    if 'input' in item and 'chosen' in item and 'rejected' in item:
+                        data.append(item)
+                    else:
+                        print(f"警告: 数据项缺少必要字段: {item}")
+                except json.JSONDecodeError:
+                    print(f"警告: 无法解析JSON行: {line}")
+                    
+        print(f"从本地文件加载了 {len(data)} 条数据")
+        return Dataset.from_list(data)
 
     def filter_indices(self):
         valid_indices = []
